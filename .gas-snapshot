@@ -1,0 +1,7 @@
+StackingTest:test_Exit() (gas: 111797)
+StackingTest:test_GetReward() (gas: 131042)
+StackingTest:test_MultipleStakes() (gas: 123579)
+StackingTest:test_RevertIf_GetRewardWithoutEarnings() (gas: 17758)
+StackingTest:test_RevertIf_WithdrawTooMuch() (gas: 87415)
+StackingTest:test_Stake() (gas: 95482)
+StackingTest:test_Withdraw() (gas: 97085)

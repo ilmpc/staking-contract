@@ -4,14 +4,15 @@ pragma solidity ^0.8.13;
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
 contract Stacking {
-    // address immutable owner;
-    // bool enabled;
     IERC20 immutable stackingToken;
     IERC20 immutable rewardToken;
-    uint256 rewardRate;
+    uint256 immutable rewardRate;
 
-    constructor(address _stackingToken, address _rewardToken, uint256 _rewardRate) {
-        // this.owner = msg.sender;
+    constructor(
+        address _stackingToken,
+        address _rewardToken,
+        uint256 _rewardRate
+    ) {
         stackingToken = IERC20(_stackingToken);
         rewardToken = IERC20(_rewardToken);
         rewardRate = _rewardRate;
@@ -22,37 +23,44 @@ contract Stacking {
     mapping(address => uint256) public balances;
 
     function earned(address account) public view returns (uint256) {
-        uint256 blocksPassed = block.number - lastClaimed[account];
-        return rewardDebt[account] + blocksPassed * rewardRate * balances[account];
+        return
+            rewardDebt[account] +
+            (block.number - lastClaimed[account]) *
+            rewardRate *
+            balances[account];
     }
 
     function stake(uint256 amount) external {
         require(stackingToken.transferFrom(msg.sender, address(this), amount));
+        uint256 currentBalance = balances[msg.sender];
 
-        if (balances[msg.sender] != 0) {
+        if (currentBalance != 0) {
             rewardDebt[msg.sender] = earned(msg.sender);
         }
 
         lastClaimed[msg.sender] = block.number;
-        balances[msg.sender] += amount;
+        balances[msg.sender] = currentBalance + amount;
     }
 
     function withdraw(uint256 amount) external {
-        require(balances[msg.sender] >= amount);
+        uint256 currentBalance = balances[msg.sender];
+        require(currentBalance >= amount);
 
         rewardDebt[msg.sender] = earned(msg.sender);
         lastClaimed[msg.sender] = block.number;
+        balances[msg.sender] = currentBalance - amount;
 
-        balances[msg.sender] -= amount;
         stackingToken.transfer(msg.sender, amount);
     }
 
     function getReward() external {
-        uint256 amount = earned(msg.sender);
-        require(amount > 0);
+        uint256 earnedAmount = earned(msg.sender);
+        require(earnedAmount > 0);
+
         lastClaimed[msg.sender] = block.number;
         rewardDebt[msg.sender] = 0;
-        rewardToken.transfer(msg.sender, amount);
+
+        rewardToken.transfer(msg.sender, earnedAmount);
     }
 
     function exit() external {
@@ -62,9 +70,11 @@ contract Stacking {
             rewardDebt[msg.sender] = 0;
             rewardToken.transfer(msg.sender, rewardAmount);
         }
-        if (balances[msg.sender] > 0) {
-            stackingToken.transfer(msg.sender, balances[msg.sender]);
+
+        uint256 currentBalance = balances[msg.sender];
+        if (currentBalance > 0) {
             balances[msg.sender] = 0;
+            stackingToken.transfer(msg.sender, currentBalance);
         }
     }
 }
