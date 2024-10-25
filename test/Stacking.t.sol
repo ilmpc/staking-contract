@@ -3,9 +3,9 @@ pragma solidity ^0.8.13;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {Stacking} from "../src/Stacking.sol";
-import {MockERC20} from "forge-std/mocks/MockERC20.sol";
+import {MockERC20 as ERC20} from "forge-std/mocks/MockERC20.sol";
 
-contract MintableMockERC20 is MockERC20 {
+contract MockERC20 is ERC20 {
     function mint(address to, uint256 amount) public {
         _mint(to, amount);
     }
@@ -13,8 +13,8 @@ contract MintableMockERC20 is MockERC20 {
 
 contract StackingTest is Test {
     Stacking public staking;
-    MintableMockERC20 public stakingToken;
-    MintableMockERC20 public rewardToken;
+    MockERC20 public stakingToken;
+    MockERC20 public rewardToken;
 
     address alice = makeAddr("alice");
     uint256 constant INITIAL_BALANCE = 10 ether;
@@ -22,9 +22,9 @@ contract StackingTest is Test {
 
     function setUp() public {
         // Deploy mock tokens
-        stakingToken = new MintableMockERC20();
+        stakingToken = new MockERC20();
         stakingToken.initialize("Staking Token", "STK", 18);
-        rewardToken = new MintableMockERC20();
+        rewardToken = new MockERC20();
         rewardToken.initialize("Reward Token", "RWD", 18);
 
         // Deploy staking contract
